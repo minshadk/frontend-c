@@ -16,6 +16,8 @@ import ManageComplaints from './pages/admin/ManageComplaints'
 import ComplaintDetails from './pages/ComplaintDetails'
 import AllFeedBacks from './pages/admin/AllFeedBacks'
 
+import LandingPage from './pages/LadningPage'
+
 import ManageWork from './pages/worker/ManageWork'
 // import ComplaintDetails from './pages/worker/ComplaintDetails'
 import AllDepartmentWorks from './pages/worker/AllDepartmentWorks'
@@ -35,7 +37,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <AuthContextProvider>
       <Router>
         <Routes>
-          <Route index path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route index path="/" element={<LandingPage />} />
           <Route path="/signUp" element={<Signup />} />
 
           {/* Admin Routes */}

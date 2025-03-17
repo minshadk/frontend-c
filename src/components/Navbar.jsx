@@ -1,40 +1,53 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuthContext } from "../hooks/useAuthContext";
+import React from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthContext } from '../hooks/useAuthContext'
 
 const Navbar = () => {
-  const { user, logout } = useAuthContext();
-  const navigate = useNavigate();
+  const { user, logout } = useAuthContext()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    logout(); 
-    navigate("/"); 
-  };
+    logout()
+    navigate('/login')
+  }
 
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <h1 className="text-lg font-semibold"></h1>
-      
-      <div className="flex gap-4 items-center">
-        {user?.userType === "user" && (
-          <>
-            <Link to="/users/complaintStatus" className="bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600">
+    <nav className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-4 flex justify-between items-center shadow-lg">
+      <h1 className="text-lg font-semibold">Civic Fix</h1>
+
+      {user?.userType === 'user' && (
+        <div className="flex gap-4 items-center">
+          <div className="flex justify-center gap-4 items-center flex-grow">
+            <Link
+              to="/users/complaintStatus"
+              className="px-4 py-2 rounded-md text-white hover:text-gray-300 transition duration-300 ease-in-out transform hover:scale-105"
+            >
               Complaint Status
             </Link>
-            <Link to="/users/registerComplaint" className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600">
+            <Link
+              to="/users/registerComplaint"
+              className="px-4 py-2 rounded-md text-white hover:text-gray-300 transition duration-300 ease-in-out transform hover:scale-105"
+            >
               Register Complaint
             </Link>
-            <Link to="/users/feedBacks" className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600">
+            <Link
+              to="/users/feedBacks"
+              className="px-4 py-2 rounded-md text-white hover:text-gray-300 transition duration-300 ease-in-out transform hover:scale-105"
+            >
               Feedbacks
             </Link>
-          </>
-        )}
+          </div>
+        </div>
+      )}
+      <div className="flex gap-4 items-center">
         {user && (
           <>
-            <span className="font-semibold">{user?.userName}</span>
+            <span className="font-semibold text-gray-200">
+              {user?.userName}
+            </span>
             <button
               onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded-md hover:bg-red-600"
+              className="bg-red-500 px-4 py-2 rounded-md hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105"
             >
               Logout
             </button>
@@ -42,7 +55,7 @@ const Navbar = () => {
         )}
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

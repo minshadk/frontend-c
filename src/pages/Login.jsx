@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
+import { Loader, User, Lock, AlertCircle, CheckCircle } from 'lucide-react'; // Icons for form fields and messages
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Login = () => {
 
   const [successMessage, setSuccessMessage] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(false); // Loading state
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,6 +49,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      setLoading(true); // Start loading
       try {
         const response = await axios.post(
           'http://localhost:8001/user/login',
@@ -88,66 +91,111 @@ const Login = () => {
         setLoginError(
           error.response?.data?.message || 'Invalid username or password',
         );
+      } finally {
+        setLoading(false); // Stop loading
       }
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-semibold text-center mb-4">Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 flex justify-center items-center">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-96">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Login
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Username Field */}
           <div>
-            <label className="block font-medium">Username</label>
+            <label className="block text-gray-700 font-medium mb-2">
+              <span className="flex items-center">
+                <User className="h-5 w-5 mr-2 text-blue-500" />
+                Username
+              </span>
+            </label>
             <input
               type="text"
               name="userName"
               value={formData.userName}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your username"
             />
             {errors.userName && (
-              <p className="text-red-500 text-sm">{errors.userName}</p>
+              <p className="text-red-500 text-sm mt-1 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.userName}
+              </p>
             )}
           </div>
 
+          {/* Password Field */}
           <div>
-            <label className="block font-medium">Password</label>
+            <label className="block text-gray-700 font-medium mb-2">
+              <span className="flex items-center">
+                <Lock className="h-5 w-5 mr-2 text-blue-500" />
+                Password
+              </span>
+            </label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your password"
             />
             {errors.password && (
-              <p className="text-red-500 text-sm">{errors.password}</p>
+              <p className="text-red-500 text-sm mt-1 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.password}
+              </p>
             )}
           </div>
 
+          {/* Forgot Password Link */}
+          <div className="text-right">
+            <Link
+              to="/forgot-password" // Update with your forgot password route
+              className="text-blue-500 hover:text-blue-600 text-sm"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+            disabled={loading}
           >
-            Login
+            {loading ? (
+              <Loader className="h-5 w-5 animate-spin" />
+            ) : (
+              'Login'
+            )}
           </button>
 
+          {/* Error and Success Messages */}
           {loginError && (
-            <p className="text-red-500 text-sm text-center mt-2">
-              {loginError}
-            </p>
+            <div className="mt-4 flex items-center justify-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <p className="text-red-500 text-sm">{loginError}</p>
+            </div>
           )}
-
           {successMessage && (
-            <p className="text-green-500 text-sm text-center mt-2">
-              {successMessage}
-            </p>
+            <div className="mt-4 flex items-center justify-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <p className="text-green-500 text-sm">{successMessage}</p>
+            </div>
           )}
 
-          {/* Link to Signup Page */}
-          <p className="text-center mt-4">
+          {/* Signup Link */}
+          <p className="text-center mt-4 text-gray-600">
             Don't have an account?{' '}
-            <Link to="/signUp" className="text-blue-500 hover:underline">
+            <Link
+              to="/signUp"
+              className="text-blue-500 hover:text-blue-600"
+            >
               Sign up
             </Link>
           </p>

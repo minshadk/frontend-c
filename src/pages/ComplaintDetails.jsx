@@ -2,6 +2,16 @@ import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuthContext } from '../hooks/useAuthContext'
+import {
+  Loader,
+  ArrowLeft,
+  User,
+  Phone,
+  CheckCircle,
+  AlertCircle,
+  Briefcase,
+  HardHat,
+} from 'lucide-react' // Icons for UI elements
 
 const ComplaintDetails = () => {
   const { id } = useParams()
@@ -37,8 +47,8 @@ const ComplaintDetails = () => {
         const response = await axios.get(
           `http://localhost:8001/complaints/${id}`,
         )
-        setComplaint(response.data.complaint)
         console.log(response.data.complaint)
+        setComplaint(response.data.complaint)
         setSelectedDepartment(response.data.complaint.department)
 
         // If a worker is already assigned, set the selected worker
@@ -65,13 +75,11 @@ const ComplaintDetails = () => {
 
   const handleAssignWorker = async () => {
     if (!selectedWorker) return
-    console.log(selectedWorker)
     try {
       const response = await axios.patch(
         `http://localhost:8001/complaints/${id}`,
         { assignedWorker: selectedWorker, department: selectedDepartment },
       )
-      console.log(response)
       setComplaint((prev) => ({
         ...prev,
         assignedWorker: workers.find((w) => w._id === selectedWorker),
@@ -87,7 +95,6 @@ const ComplaintDetails = () => {
         `http://localhost:8001/complaints/${id}`,
         { assignedWorker: user.userId, department: user.department },
       )
-      console.log(response)
       setComplaint((prev) => ({
         ...prev,
         assignedWorker: {
@@ -101,111 +108,185 @@ const ComplaintDetails = () => {
     }
   }
 
-  if (loading) return <p className="text-center mt-5">Loading details...</p>
-  if (error) return <p className="text-red-500 text-center mt-5">{error}</p>
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader className="animate-spin h-8 w-8 text-blue-500" />{' '}
+        {/* Loading spinner */}
+      </div>
+    )
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <AlertCircle className="h-6 w-6 text-red-500" />
+        <p className="text-red-500 text-lg ml-2">{error}</p>
+      </div>
+    )
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Link
-        onClick={() => navigate(-1)}
-        className="text-blue-500 mb-4 inline-block cursor-pointer"
-      >
-        ← Back
-      </Link>
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <img
-          src={complaint.complaintImage?.url || '/placeholder.jpg'}
-          alt="Complaint"
-          className="w-full h-60 object-cover rounded-md mb-4"
-        />
-        <h2 className="text-2xl font-bold mb-2">{complaint.title}</h2>
-        <p className="text-gray-700 mb-4">{complaint.description}</p>
-        <p
-          className={`px-3 py-1 rounded-md text-white inline-block ${
-            complaint.status === 'Pending'
-              ? 'bg-yellow-500'
-              : complaint.status === 'Resolved'
-              ? 'bg-green-500'
-              : 'bg-red-500'
-          }`}
+    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 py-10">
+      <div className="max-w-4xl mx-auto p-6">
+        <Link
+          onClick={() => navigate(-1)}
+          className="text-blue-500 mb-4 inline-flex items-center cursor-pointer hover:text-blue-600 transition duration-300"
         >
-          {complaint.status}
-        </p>
-      </div>
-
-      {complaint.resolveImage?.url && (
-        <div>
-          <h2 className="text-2xl font-bold mb-2">Resolved Image</h2>
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back
+        </Link>
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+          {/* Complaint Image */}
           <img
-            src={complaint.resolveImage?.url || '/placeholder.jpg'}
-            alt="Resolved Complaint"
-            className="w-full h-60 object-cover rounded-md mb-4"
+            src={complaint.complaintImage?.url || '/placeholder.jpg'}
+            alt="Complaint"
+            className="w-full h-64 object-cover rounded-lg mb-6"
           />
-        </div>
-      )}
 
-      {complaint.assignedWorker ? (
-        <div className="bg-white p-6 rounded-lg shadow-lg mt-4">
-          <h2 className="text-2xl font-bold mb-2">Assigned Worker</h2>
-          <p className="text-gray-700 mb-4">
-            {complaint.assignedWorker.userName}
-          </p>
-          <p className="text-gray-700 mb-4">
-            {complaint.assignedWorker.phoneNumber}
-          </p>
-        </div>
-      ) : user.userType === 'admin' ? (
-        <div className="mt-4">
-          <label className="block text-gray-700 font-bold mb-2">
-            Select Department:
-          </label>
-          <select
-            value={selectedDepartment}
-            onChange={handleDepartmentChange}
-            className="border rounded p-2 w-full mb-2"
-          >
-            <option value="">Select a department</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+          {/* Complaint Title and Description */}
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            {complaint.title}
+          </h2>
+          <p className="text-gray-600 mb-6">{complaint.description}</p>
 
-          <label className="block text-gray-700 font-bold mb-2">
-            Assign Worker:
-          </label>
-          <select
-            value={selectedWorker}
-            onChange={(e) => setSelectedWorker(e.target.value)}
-            className="border rounded p-2 w-full mb-2"
-          >
-            <option value="">Select a worker</option>
-            {workers.map((worker) => (
-              <option key={worker._id} value={worker._id}>
-                {worker.userName}
-              </option>
-            ))}
-          </select>
+          {/* Complaint Status */}
+          <div className="flex items-center space-x-2 mb-6">
+            <span
+              className={`px-3 py-1 rounded-md text-white ${
+                complaint.status === 'pending'
+                  ? 'bg-yellow-500'
+                  : complaint.status === 'completed'
+                  ? 'bg-green-500'
+                  : 'bg-red-500'
+              }`}
+            >
+              {complaint.status}
+            </span>
+          </div>
 
-          <button
-            onClick={handleAssignWorker}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            disabled={!selectedWorker}
-          >
-            Assign Worker
-          </button>
+          {/* Resolved Image */}
+          {complaint.resolveImage?.url && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Resolved Image
+              </h2>
+              <img
+                src={complaint.resolveImage?.url || '/placeholder.jpg'}
+                alt="Resolved Complaint"
+                className="w-full h-64 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
+          {/* Assigned Worker Section */}
+          {complaint.assignedWorker ? (
+            <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Assigned Worker
+              </h2>
+              <div className="flex items-center space-x-4">
+                <User className="h-6 w-6 text-blue-500" />
+                <p className="text-gray-700">
+                  {complaint.assignedWorker.userName}
+                </p>
+              </div>
+              <div className="flex items-center space-x-4 mt-2">
+                <Phone className="h-6 w-6 text-blue-500" />
+                <p className="text-gray-700">
+                  {complaint.assignedWorker.phoneNumber}
+                </p>
+              </div>
+            </div>
+          ) : user.userType === 'admin' ? (
+            <div className="mt-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Assign Worker
+              </h2>
+              <div className="space-y-4">
+                {/* Department Dropdown */}
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    <span className="flex items-center">
+                      <Briefcase className="h-5 w-5 mr-2 text-blue-500" />
+                      Select Department:
+                    </span>
+                  </label>
+                  <select
+                    value={selectedDepartment}
+                    onChange={handleDepartmentChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a department</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Worker Dropdown */}
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    <span className="flex items-center">
+                      <HardHat className="h-5 w-5 mr-2 text-blue-500" />
+                      Assign Worker:
+                    </span>
+                  </label>
+                  <select
+                    value={selectedWorker}
+                    onChange={(e) => setSelectedWorker(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a worker</option>
+                    {workers.map((worker) => (
+                      <option key={worker._id} value={worker._id}>
+                        {worker.userName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Assign Worker Button */}
+                <button
+                  onClick={handleAssignWorker}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+                  disabled={!selectedWorker}
+                >
+                  Assign Worker
+                </button>
+              </div>
+            </div>
+          ) : user.userType === 'worker' ? (
+            <div className="mt-6">
+              <button
+                onClick={handlePickWork}
+                className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center"
+              >
+                Pick Work
+              </button>
+            </div>
+          ) : null}
+          {complaint.userId && (
+            <div className="bg-gray-50 p-6 rounded-lg shadow-inner mt-5">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Assigned Worker
+              </h2>
+              <div className="flex items-center space-x-4">
+                <User className="h-6 w-6 text-blue-500" />
+                <p className="text-gray-700">
+                  {complaint.userId.userName}
+                </p>
+              </div>
+              <div className="flex items-center space-x-4 mt-2">
+                <Phone className="h-6 w-6 text-blue-500" />
+                <p className="text-gray-700">
+                  {complaint.userId.phoneNumber}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      ) : user.userType === 'worker' ? (
-        <div className="mt-4">
-          <button
-            onClick={handlePickWork}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Pick Work
-          </button>
-        </div>
-      ) : null}
+      </div>
     </div>
   )
 }
