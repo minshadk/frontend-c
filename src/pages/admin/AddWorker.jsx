@@ -13,6 +13,7 @@ const AddWorker = () => {
   const [errors, setErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const departments = ['PWD', 'KSEB', 'KWA']
 
@@ -23,7 +24,6 @@ const AddWorker = () => {
     setErrorMessage('')
   }
 
-  // Form Validation
   const validateForm = () => {
     let valid = true
     let newErrors = {}
@@ -58,10 +58,10 @@ const AddWorker = () => {
     return valid
   }
 
-  // Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validateForm()) return
+    setLoading(true)
 
     try {
       const response = await axios.post(
@@ -77,6 +77,8 @@ const AddWorker = () => {
       })
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Failed to add worker.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -84,7 +86,6 @@ const AddWorker = () => {
     <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg mt-10">
       <h2 className="text-2xl font-semibold text-center mb-4">Add Worker</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Worker Name */}
         <div>
           <label className="block font-medium">Worker Name</label>
           <input
@@ -99,7 +100,6 @@ const AddWorker = () => {
           )}
         </div>
 
-        {/* Phone Number */}
         <div>
           <label className="block font-medium">Phone Number</label>
           <input
@@ -114,7 +114,6 @@ const AddWorker = () => {
           )}
         </div>
 
-        {/* Department Dropdown */}
         <div>
           <label className="block font-medium">Department</label>
           <select
@@ -135,12 +134,11 @@ const AddWorker = () => {
           )}
         </div>
 
-        {/* Password */}
         <div>
           <label className="block font-medium">Password</label>
           <input
             type="password"
-            name="password" // ✅ Fixed
+            name="password"
             value={formData.password}
             onChange={handleChange}
             className="w-full border p-2 rounded"
@@ -150,15 +148,14 @@ const AddWorker = () => {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          disabled={loading}
         >
-          Add Worker
+          {loading ? 'Adding...' : 'Add Worker'}
         </button>
 
-        {/* Messages */}
         {successMessage && (
           <p className="text-green-500 text-sm text-center mt-2">
             {successMessage}

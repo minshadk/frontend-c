@@ -24,6 +24,9 @@ const Navbar = () => {
             <Link to="/users/registerComplaint" className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600">
               Register Complaint
             </Link>
+            <Link to="/users/feedBacks" className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600">
+              FeedBacks
+            </Link>
           </>
         )}
         {user && (

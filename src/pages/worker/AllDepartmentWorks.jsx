@@ -1,43 +1,56 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
+import { useAuthContext } from '../../hooks/useAuthContext'
 
-const ManageComplaints = () => {
+const AllDepartmentWorks = () => {
   const [complaints, setComplaints] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const { user } = useAuthContext()
+
   useEffect(() => {
+    console.log(user.department)
+    if (!user || !user.department) {
+      setError('No department assigned to the user.')
+      setLoading(false)
+      return
+    }
+
     const fetchComplaints = async () => {
       try {
         const response = await axios.get('http://localhost:8001/complaints')
-        const formattedComplaints = response.data.complaints.map((c) => ({
-          ...c,
-          complaintImage: c.complaintImage || { url: '/placeholder.jpg' },
-        }))
-        console.log(formattedComplaints)
-        setComplaints(formattedComplaints)
-        setLoading(false)
+        console.log( response.data.complaints)
+        const filteredComplaints = response.data.complaints
+          .filter((c) => c.department === user.department) // Filter by user's department
+          .map((c) => ({
+            ...c,
+            complaintImage: c.complaintImage || { url: '/placeholder.jpg' },
+          }))
+
+        setComplaints(filteredComplaints)
       } catch (err) {
         setError('Failed to fetch complaints')
+      } finally {
         setLoading(false)
       }
     }
 
     fetchComplaints()
-  }, [])
+  }, [user]) // Re-run when user changes
 
   if (loading) return <p className="text-center mt-5">Loading complaints...</p>
   if (error) return <p className="text-red-500 text-center mt-5">{error}</p>
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">Manage Complaints</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Department Complaints</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {complaints.length > 0 ? (
           complaints.map((complaint) => (
             <Link
-              to={`/admin/complaints/${complaint._id}`} // Ensure the leading slash "/"
+              to={`/admin/complaints/${complaint._id}`}
               key={complaint._id}
               className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300"
             >
@@ -51,11 +64,11 @@ const ManageComplaints = () => {
                 className={`mt-2 px-2 py-1 rounded-md text-white ${
                   complaint.status === 'pending'
                     ? 'bg-red-500'
-                    : complaint.status === 'in progress'
+                    : complaint.status === 'In Progress'
                     ? 'bg-yellow-500'
                     : complaint.status === 'completed'
                     ? 'bg-green-500'
-                    : 'bg-red-500'
+                    : 'bg-gray-500'
                 }`}
               >
                 {complaint.status}
@@ -64,7 +77,7 @@ const ManageComplaints = () => {
           ))
         ) : (
           <p className="text-center col-span-3 text-gray-500">
-            No complaints found.
+            No complaints found for your department.
           </p>
         )}
       </div>
@@ -72,4 +85,4 @@ const ManageComplaints = () => {
   )
 }
 
-export default ManageComplaints
+export default AllDepartmentWorks

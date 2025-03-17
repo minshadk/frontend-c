@@ -10,7 +10,6 @@ const RegisterComplaint = () => {
     title: '',
     description: '',
     place: '',
-    // department: '',
     image: null,
     userId: user.userId,
   })
@@ -18,8 +17,7 @@ const RegisterComplaint = () => {
   const [errors, setErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-
-  const departments = ['HR', 'Engineering', 'Sales', 'Marketing', 'Support']
+  const [loading, setLoading] = useState(false) // Loading state
 
   // Handle input changes
   const handleChange = (e) => {
@@ -55,11 +53,6 @@ const RegisterComplaint = () => {
       valid = false
     }
 
-    // if (!formData.department) {
-    //   newErrors.department = 'Department is required.'
-    //   valid = false
-    // }
-
     if (!formData.image) {
       newErrors.image = 'Image is required.'
       valid = false
@@ -74,11 +67,12 @@ const RegisterComplaint = () => {
     e.preventDefault()
     if (!validateForm()) return
 
+    setLoading(true) // Set loading to true
+
     const complaintData = new FormData()
     complaintData.append('title', formData.title)
     complaintData.append('description', formData.description)
     complaintData.append('address', formData.place)
-    complaintData.append('department', formData.department)
     complaintData.append('image', formData.image)
     complaintData.append('userId', formData.userId)
 
@@ -98,13 +92,14 @@ const RegisterComplaint = () => {
         title: '',
         description: '',
         place: '',
-        department: '',
         image: null,
       })
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message || 'Failed to register complaint.',
       )
+    } finally {
+      setLoading(false) // Set loading to false after request completion
     }
   }
 
@@ -114,7 +109,6 @@ const RegisterComplaint = () => {
         Register Complaint
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title */}
         <div>
           <label className="block font-medium">Title</label>
           <input
@@ -129,7 +123,6 @@ const RegisterComplaint = () => {
           )}
         </div>
 
-        {/* Description */}
         <div>
           <label className="block font-medium">Description</label>
           <textarea
@@ -143,7 +136,6 @@ const RegisterComplaint = () => {
           )}
         </div>
 
-        {/* Place */}
         <div>
           <label className="block font-medium">Place</label>
           <input
@@ -158,28 +150,6 @@ const RegisterComplaint = () => {
           )}
         </div>
 
-        {/* Department Dropdown */}
-        {/* <div>
-          <label className="block font-medium">Department</label>
-          <select
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Department</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
-          {errors.department && (
-            <p className="text-red-500 text-sm">{errors.department}</p>
-          )}
-        </div> */}
-
-        {/* Image Upload */}
         <div>
           <label className="block font-medium">Upload Image</label>
           <input
@@ -193,15 +163,14 @@ const RegisterComplaint = () => {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          disabled={loading} // Disable button when loading
         >
-          Submit Complaint
+          {loading ? 'Submitting...' : 'Submit Complaint'}
         </button>
 
-        {/* Messages */}
         {successMessage && (
           <p className="text-green-500 text-sm text-center mt-2">
             {successMessage}
