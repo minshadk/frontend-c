@@ -4,12 +4,18 @@ import Navbar from "../components/Navbar";
 
 const AdminLayout = () => {
   return (
-    <div className="flex">
+    <div className="flex h-screen">
+      {/* Fixed Sidebar */}
       <Sidebar />
-      <div className="flex-1">
+
+      {/* Main Content Wrapper */}
+      <div className="flex-1 flex flex-col ml-64">
+        {/* Fixed Navbar */}
         <Navbar />
-        <main className="p-6">
-          <Outlet /> 
+
+        {/* Scrollable Content Area */}
+        <main className="p-6 flex-1 overflow-auto bg-gray-100">
+          <Outlet />
         </main>
       </div>
     </div>

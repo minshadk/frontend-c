@@ -17,7 +17,7 @@ const Sidebar = () => {
       },
       {
         name: 'Add Worker',
-        to: '/admin/addWorker   ',
+        to: '/admin/addWorker',
         icon: <Users size={20} />,
       },
       {
@@ -50,7 +50,7 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="w-64 bg-gray-900 text-white h-screen p-5">
+    <aside className="w-64 bg-gray-900 text-white h-screen p-5 fixed top-0 left-0 overflow-y-auto">
       <h2 className="text-xl font-bold mb-6">
         {user.userType === 'admin'
           ? 'Admin Panel'

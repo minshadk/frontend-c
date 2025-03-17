@@ -8,14 +8,14 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout(); 
-    navigate("/"); // 
+    navigate("/"); 
   };
 
   return (
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <h1 className="text-lg font-semibold">Complaint Management</h1>
+      <h1 className="text-lg font-semibold"></h1>
       
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center">
         {user?.userType === "user" && (
           <>
             <Link to="/users/complaintStatus" className="bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600">
@@ -25,17 +25,20 @@ const Navbar = () => {
               Register Complaint
             </Link>
             <Link to="/users/feedBacks" className="bg-green-500 px-4 py-2 rounded-md hover:bg-green-600">
-              FeedBacks
+              Feedbacks
             </Link>
           </>
         )}
         {user && (
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 px-4 py-2 rounded-md hover:bg-red-600"
-          >
-            Logout
-          </button>
+          <>
+            <span className="font-semibold">{user?.userName}</span>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </>
         )}
       </div>
     </nav>
