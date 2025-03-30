@@ -153,14 +153,7 @@ const Login = () => {
           </div>
 
           {/* Forgot Password Link */}
-          <div className="text-right">
-            <Link
-              to="/forgot-password" // Update with your forgot password route
-              className="text-blue-500 hover:text-blue-600 text-sm"
-            >
-              Forgot Password?
-            </Link>
-          </div>
+      
 
           {/* Submit Button */}
           <button

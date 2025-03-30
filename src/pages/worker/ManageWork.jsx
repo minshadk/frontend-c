@@ -1,95 +1,136 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuthContext } from "../../hooks/useAuthContext";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useNavigate } from "react-router-dom";
-import { Loader, AlertCircle, Clock, CheckCircle, XCircle } from "lucide-react"; // Icons for status and loading
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import { useAuthContext } from '../../hooks/useAuthContext'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { useNavigate } from 'react-router-dom'
+import { Loader, AlertCircle, Clock, CheckCircle } from 'lucide-react' // Icons
 
 const ManageWork = () => {
-  const [workAssignments, setWorkAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const { user } = useAuthContext();
-  const navigate = useNavigate();
+  const [workAssignments, setWorkAssignments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const { user } = useAuthContext()
+  const navigate = useNavigate()
 
   useEffect(() => {
-    if (!user?.userId) return;
+    if (!user?.userId) return
 
     const fetchWorkAssignments = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8001/complaints/assigned/${user.userId}`
-        );
+          `http://localhost:8001/complaints/assigned/${user.userId}`,
+        )
 
         if (Array.isArray(response.data.complaints)) {
-          setWorkAssignments(response.data.complaints);
-          console.log("Fetched work assignments:", response.data.complaints);
+          setWorkAssignments(response.data.complaints)
         } else {
-          setError("Unexpected data format received");
+          setError('Unexpected data format received')
         }
       } catch (err) {
-        setError("Failed to fetch work assignments");
+        setError('Failed to fetch work assignments')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchWorkAssignments();
-  }, [user?.userId]);
+    fetchWorkAssignments()
+  }, [user?.userId])
 
   const updateStatus = async (id, newStatus) => {
     try {
       await axios.patch(`http://localhost:8001/complaints/${id}`, {
-        status: newStatus.toLowerCase(), // Ensure consistency
-      });
+        status: newStatus.toLowerCase(),
+      })
 
       setWorkAssignments((prev) =>
         prev.map((work) =>
-          work._id === id ? { ...work, status: newStatus } : work
-        )
-      );
+          work._id === id ? { ...work, status: newStatus } : work,
+        ),
+      )
     } catch (err) {
-      alert("Failed to update status");
+      alert('Failed to update status')
     }
-  };
+  }
+
+  // const onDragEnd = (result) => {
+  //   if (!result.destination) return;
+
+  //   const { source, destination, draggableId } = result;
+
+  //   if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+  //   setWorkAssignments((prev) => {
+  //     const copiedTasks = Array.from(prev);
+  //     const movedItemIndex = copiedTasks.findIndex((task) => task._id === draggableId);
+  //     if (movedItemIndex === -1) return prev;
+
+  //     const movedItem = copiedTasks[movedItemIndex];
+  //     copiedTasks.splice(movedItemIndex, 1);
+
+  //     if (source.droppableId !== destination.droppableId) {
+  //       movedItem.status = destination.droppableId.toLowerCase();
+  //     }
+
+  //     copiedTasks.splice(destination.index, 0, movedItem);
+  //     return copiedTasks;
+  //   });
+
+  //   if (source.droppableId !== destination.droppableId) {
+  //     updateStatus(draggableId, destination.droppableId);
+  //   }
+  // };
 
   const onDragEnd = (result) => {
-    console.log("Drag result:", result);
-    if (!result.destination) return;
+    if (!result.destination) return
 
-    const { source, destination } = result;
-    console.log("Moving from:", source, "to:", destination);
+    const { source, destination, draggableId } = result
 
+    // If dropped in the same position, do nothing
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
     )
-      return;
+      return
 
+    // Define allowed status order
+    const statusOrder = ['pending', 'in progress', 'completed']
+    const sourceIndex = statusOrder.indexOf(source.droppableId)
+    const destinationIndex = statusOrder.indexOf(destination.droppableId)
+
+    // Prevent moving tasks backward (right to left)
+    if (destinationIndex < sourceIndex) return
+
+    // Move item within the UI
     setWorkAssignments((prev) => {
-      const updatedAssignments = [...prev];
-      const [movedItem] = updatedAssignments.splice(source.index, 1);
+      const copiedTasks = Array.from(prev)
+      const movedItemIndex = copiedTasks.findIndex(
+        (task) => task._id === draggableId,
+      )
+      if (movedItemIndex === -1) return prev
+
+      const movedItem = copiedTasks[movedItemIndex]
+      copiedTasks.splice(movedItemIndex, 1)
 
       if (source.droppableId !== destination.droppableId) {
-        movedItem.status = destination.droppableId.toLowerCase();
+        movedItem.status = destination.droppableId.toLowerCase()
       }
 
-      updatedAssignments.splice(destination.index, 0, movedItem);
-      console.log("Updated assignments:", updatedAssignments);
-      return updatedAssignments;
-    });
+      copiedTasks.splice(destination.index, 0, movedItem)
+      return copiedTasks
+    })
 
+    // Update status in the backend only if moving forward
     if (source.droppableId !== destination.droppableId) {
-      updateStatus(result.draggableId, destination.droppableId);
+      updateStatus(draggableId, destination.droppableId)
     }
-  };
+  }
 
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader className="animate-spin h-8 w-8 text-blue-500" /> {/* Loading spinner */}
+        <Loader className="animate-spin h-8 w-8 text-blue-500" />
       </div>
-    );
+    )
 
   if (error)
     return (
@@ -97,7 +138,7 @@ const ManageWork = () => {
         <AlertCircle className="h-6 w-6 text-red-500" />
         <p className="text-red-500 text-lg ml-2">{error}</p>
       </div>
-    );
+    )
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 py-10">
@@ -107,18 +148,20 @@ const ManageWork = () => {
         </h2>
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {["pending", "in progress", "completed"].map((status) => (
+            {['pending', 'in progress', 'completed'].map((status) => (
               <Droppable key={status} droppableId={status}>
-                {(provided) => (
+                {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-gray-50 p-6 rounded-xl shadow-md min-h-[300px]"
+                    className={`p-6 rounded-xl shadow-md min-h-[300px] transition-all ${
+                      snapshot.isDraggingOver ? 'bg-blue-100' : 'bg-gray-50'
+                    }`}
                   >
                     <h3 className="text-xl font-bold mb-6 text-center capitalize flex items-center justify-center">
-                      {status === "pending" ? (
+                      {status === 'pending' ? (
                         <Clock className="h-6 w-6 text-yellow-500 mr-2" />
-                      ) : status === "in progress" ? (
+                      ) : status === 'in progress' ? (
                         <Clock className="h-6 w-6 text-blue-500 mr-2" />
                       ) : (
                         <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
@@ -130,7 +173,7 @@ const ManageWork = () => {
                       .map((work, index) => (
                         <Draggable
                           key={work._id}
-                          draggableId={work._id}
+                          draggableId={String(work._id)}
                           index={index}
                         >
                           {(provided) => (
@@ -150,10 +193,12 @@ const ManageWork = () => {
                                   className="w-full h-40 object-cover rounded-md mb-3"
                                 />
                               ) : (
-                                <p className="text-gray-500 text-sm">No Image</p>
+                                <p className="text-gray-500 text-sm">
+                                  No Image
+                                </p>
                               )}
                               <h3 className="text-lg font-semibold text-gray-800">
-                                {work.title || "No Title Available"}
+                                {work.title || 'No Title Available'}
                               </h3>
                             </div>
                           )}
@@ -168,7 +213,7 @@ const ManageWork = () => {
         </DragDropContext>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ManageWork;
+export default ManageWork

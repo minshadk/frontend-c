@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useAuthContext } from '../../hooks/useAuthContext';
-import { Loader, Image, MapPin, FileText, AlertCircle, CheckCircle } from 'lucide-react'; // Icons for form fields and messages
+import { Loader, Image, FileText, AlertCircle, CheckCircle, MapPin } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const RegisterComplaint = () => {
   const { user } = useAuthContext();
@@ -9,9 +11,10 @@ const RegisterComplaint = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    place: '',
     image: null,
     userId: user.userId,
+    coordinates: null,
+    address: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -19,7 +22,6 @@ const RegisterComplaint = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -27,13 +29,11 @@ const RegisterComplaint = () => {
     setErrorMessage('');
   };
 
-  // Handle file upload
   const handleFileChange = (e) => {
     setFormData({ ...formData, image: e.target.files[0] });
     setErrors({ ...errors, image: '' });
   };
 
-  // Form Validation
   const validateForm = () => {
     let valid = true;
     let newErrors = {};
@@ -48,8 +48,8 @@ const RegisterComplaint = () => {
       valid = false;
     }
 
-    if (!formData.place.trim()) {
-      newErrors.place = 'Place is required.';
+    if (!formData.coordinates) {
+      newErrors.coordinates = 'Please select a location on the map.';
       valid = false;
     }
 
@@ -62,7 +62,15 @@ const RegisterComplaint = () => {
     return valid;
   };
 
-  // Handle form submission
+  const fetchPlaceName = async (lat, lng) => {
+    try {
+      const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      setFormData((prevData) => ({ ...prevData, placeName: response.data.display_name }));
+    } catch (error) {
+      console.error('Error fetching place name:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -72,164 +80,104 @@ const RegisterComplaint = () => {
     const complaintData = new FormData();
     complaintData.append('title', formData.title);
     complaintData.append('description', formData.description);
-    complaintData.append('address', formData.place);
+    complaintData.append('latitude', formData.coordinates.lat);
+    complaintData.append('longitude', formData.coordinates.lng);
+    complaintData.append('address', formData.placeName);
     complaintData.append('image', formData.image);
     complaintData.append('userId', formData.userId);
 
-    try {
-      const response = await axios.post(
-        'http://localhost:8001/complaints/create',
-        complaintData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
-      );
 
-      setSuccessMessage(
-        response.data.message || 'Complaint registered successfully!',
-      );
-      setFormData({
-        title: '',
-        description: '',
-        place: '',
-        image: null,
+    console.log(formData)
+
+    try {
+      const response = await axios.post('http://localhost:8001/complaints/create', complaintData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+      setSuccessMessage(response.data.message || 'Complaint registered successfully!');
+      setFormData({ title: '', description: '', image: null, coordinates: null, placeName: '' });
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.message || 'Failed to register complaint.',
-      );
+      setErrorMessage(error.response?.data?.message || 'Failed to register complaint.');
     } finally {
       setLoading(false);
     }
   };
 
+  const LocationPicker = () => {
+    useMapEvents({
+      click(e) {
+        setFormData((prevData) => ({ ...prevData, coordinates: e.latlng }));
+        fetchPlaceName(e.latlng.lat, e.latlng.lng);
+      },
+    });
+    return formData.coordinates ? <Marker position={formData.coordinates} /> : null;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 py-10">
       <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-2xl">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Register Complaint
-        </h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Register Complaint</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Field */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              <span className="flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-blue-500" />
-                Title
-              </span>
+              <FileText className="h-5 w-5 mr-2 text-blue-500" /> Title
             </label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg"
               placeholder="Enter complaint title"
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.title}
-              </p>
-            )}
           </div>
 
-          {/* Description Field */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              <span className="flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-blue-500" />
-                Description
-              </span>
+              <FileText className="h-5 w-5 mr-2 text-blue-500" /> Description
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg"
               rows="4"
               placeholder="Describe your complaint"
             />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.description}
-              </p>
-            )}
           </div>
 
-          {/* Place Field */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              <span className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-blue-500" />
-                Place
-              </span>
+              <MapPin className="h-5 w-5 mr-2 text-blue-500" /> Select Location
             </label>
-            <input
-              type="text"
-              name="place"
-              value={formData.place}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter the place of complaint"
-            />
-            {errors.place && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.place}
-              </p>
-            )}
+            <MapContainer center={[10.8505, 76.2711]} zoom={13} className="h-64 w-full rounded-lg border">
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <LocationPicker />
+            </MapContainer>
+            {formData.placeName && <p className="text-gray-600 mt-2">Selected Place: {formData.placeName}</p>}
+            {errors.coordinates && <p className="text-red-500 text-sm mt-1">{errors.coordinates}</p>}
           </div>
 
-          {/* Image Upload Field */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              <span className="flex items-center">
-                <Image className="h-5 w-5 mr-2 text-blue-500" />
-                Upload Image
-              </span>
+              <Image className="h-5 w-5 mr-2 text-blue-500" /> Upload Image
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg"
             />
-            {errors.image && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.image}
-              </p>
-            )}
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader className="h-5 w-5 animate-spin" />
-            ) : (
-              'Submit Complaint'
-            )}
+          <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg" disabled={loading}>
+            {loading ? <Loader className="h-5 w-5 animate-spin" /> : 'Submit Complaint'}
           </button>
 
-          {/* Success and Error Messages */}
-          {successMessage && (
-            <div className="mt-4 flex items-center justify-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <p className="text-green-500 text-sm">{successMessage}</p>
-            </div>
-          )}
-          {errorMessage && (
-            <div className="mt-4 flex items-center justify-center space-x-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              <p className="text-red-500 text-sm">{errorMessage}</p>
-            </div>
-          )}
+          {successMessage && <p className="text-green-500 text-sm mt-2">{successMessage}</p>}
+          {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
         </form>
       </div>
     </div>

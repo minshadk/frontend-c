@@ -9,12 +9,12 @@ const LandingPage = () => {
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 py-4 shadow-md bg-white">
         <h1 className="text-2xl font-bold">Civic Fix</h1>
-        <Link
-          to="/report-issue"
+        {/* <Link
+          to="/login"
           className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition"
         >
           Report an Issue
-        </Link>
+        </Link> */}
       </nav>
 
       {/* Hero Section */}
@@ -119,16 +119,7 @@ const LandingPage = () => {
       </section> */}
 
       {/* Call to Action */}
-      <section className="bg-blue-600 text-white py-14 text-center">
-        <h2 className="text-3xl font-bold">Ready to Make a Difference?</h2>
-        <p className="mt-2 text-gray-200">Report issues in your city and track resolutions today!</p>
-        <Link
-          to="/report-issue"
-          className="mt-6 inline-block bg-white text-blue-600 font-semibold px-6 py-3 rounded-full shadow-md hover:bg-gray-200 transition"
-        >
-          Report Now
-        </Link>
-      </section>
+   
     </div>
   );
 };

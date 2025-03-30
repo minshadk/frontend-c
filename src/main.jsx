@@ -12,6 +12,9 @@ import Users from './pages/Users'
 import Settings from './pages/Settings'
 import AddWorker from './pages/admin/AddWorker'
 import ManageWorker from './pages/admin/ManageWorker'
+import ManageUsers from './pages/admin/ManageUsers'
+import CreateDepartment from './pages/admin/CreateDepartment'
+
 import ManageComplaints from './pages/admin/ManageComplaints'
 import ComplaintDetails from './pages/ComplaintDetails'
 import AllFeedBacks from './pages/admin/AllFeedBacks'
@@ -48,7 +51,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="settings" element={<Settings />} />
             <Route path="addWorker" element={<AddWorker />} />
             <Route path="manageWorker" element={<ManageWorker />} />
+            <Route path="manageUsers" element={<ManageUsers />} />
             <Route path="manageComplaints" element={<ManageComplaints />} />
+            <Route path="createDepartment" element={<CreateDepartment />} />
             <Route path="allfeedBacks" element={<AllFeedBacks />} />
             <Route path="complaints/:id" element={<ComplaintDetails />} />
           </Route>

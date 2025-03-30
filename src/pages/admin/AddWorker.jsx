@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Loader, User, Phone, Briefcase, Lock, CheckCircle, AlertCircle } from 'lucide-react'; // Icons for form fields and messages
+import { Loader, User, Phone, Briefcase, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 
 const AddWorker = () => {
   const [formData, setFormData] = useState({
@@ -8,15 +8,36 @@ const AddWorker = () => {
     phoneNumber: '',
     department: '',
     password: '',
-    userType: 'worker',
+    userType: 'worker', // Explicitly set to 'worker'
   });
 
+  const [departments, setDepartments] = useState([]);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetchingDepartments, setFetchingDepartments] = useState(true);
 
-  const departments = ['PWD', 'KSEB', 'KWA'];
+  // Fetch departments from API
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get('http://localhost:8001/departments');
+        const fetchedDepartments = Array.isArray(response.data) 
+          ? response.data 
+          : response.data.departments || [];
+        
+        setDepartments(fetchedDepartments);
+      } catch (error) {
+        console.error('Failed to fetch departments:', error);
+        setErrorMessage('Failed to load departments. Please try again later.');
+      } finally {
+        setFetchingDepartments(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,19 +86,31 @@ const AddWorker = () => {
     setLoading(true);
 
     try {
+      // Create payload with worker-specific fields
+      const workerData = {
+        ...formData,
+        department: formData.department, // Ensure department is included
+        userType: 'worker' // Explicitly set userType
+      };
+
       const response = await axios.post(
         'http://localhost:8001/user/signup',
-        formData,
+        workerData
       );
+      
       setSuccessMessage(response.data.message || 'Worker added successfully!');
       setFormData({
         userName: '',
         phoneNumber: '',
         department: '',
         password: '',
+        userType: 'worker' // Reset with worker type
       });
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to add worker.');
+      const errorMsg = error.response?.data?.message || 'Failed to add worker.';
+      setErrorMessage(errorMsg.includes('duplicate') 
+        ? 'Worker with this phone number already exists' 
+        : errorMsg);
     } finally {
       setLoading(false);
     }
@@ -146,24 +179,36 @@ const AddWorker = () => {
                 Department
               </span>
             </label>
-            <select
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-            {errors.department && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.department}
-              </p>
+            {fetchingDepartments ? (
+              <div className="flex items-center justify-center p-3 border border-gray-300 rounded-lg bg-gray-50">
+                <Loader className="h-5 w-5 animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <>
+                <select
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option 
+                      key={typeof dept === 'string' ? dept : dept._id} 
+                      value={typeof dept === 'string' ? dept : dept.name}
+                    >
+                      {typeof dept === 'string' ? dept : dept.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.department && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {errors.department}
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -195,7 +240,7 @@ const AddWorker = () => {
           <button
             type="submit"
             className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-            disabled={loading}
+            disabled={loading || fetchingDepartments}
           >
             {loading ? (
               <Loader className="h-5 w-5 animate-spin" />

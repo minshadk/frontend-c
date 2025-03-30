@@ -2,7 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuthContext } from '../../hooks/useAuthContext';
-import { Loader, CheckCircle, AlertCircle, Calendar, Smile, Frown } from 'lucide-react'; // Icons for status, date, and feedback
+import { 
+  Loader, 
+  CheckCircle, 
+  AlertCircle, 
+  Calendar, 
+  Smile, 
+  Frown,
+  ChevronLeft,
+  ChevronRight,
+  Camera
+} from 'lucide-react';
 
 const ComplaintDetailsUser = () => {
   const { id } = useParams();
@@ -15,6 +25,8 @@ const ComplaintDetailsUser = () => {
     satisfactionLevel: 'Satisfied',
   });
   const [feedbackSuccess, setFeedbackSuccess] = useState('');
+  const [currentComplaintImageIndex, setCurrentComplaintImageIndex] = useState(0);
+  const [currentResolvedImageIndex, setCurrentResolvedImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchComplaint = async () => {
@@ -32,6 +44,24 @@ const ComplaintDetailsUser = () => {
 
     fetchComplaint();
   }, [id]);
+
+  // Helper function to get all images of a specific type
+  const getImages = (type) => {
+    if (type === 'complaint') {
+      return [
+        ...(complaint?.complaintImage ? [complaint.complaintImage] : []),
+        ...(complaint?.images?.filter(img => img.type === 'complaint') || [])
+      ].filter(Boolean);
+    } else {
+      return [
+        ...(complaint?.resolveImage ? [complaint.resolveImage] : []),
+        ...(complaint?.images?.filter(img => img.type === 'resolved') || [])
+      ].filter(Boolean);
+    }
+  };
+
+  const complaintImages = getImages('complaint');
+  const resolvedImages = getImages('resolved');
 
   const handleFeedbackChange = (e) => {
     const { name, value } = e.target;
@@ -67,7 +97,7 @@ const ComplaintDetailsUser = () => {
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader className="animate-spin h-8 w-8 text-blue-500" /> {/* Loading spinner */}
+        <Loader className="animate-spin h-8 w-8 text-blue-500" />
       </div>
     );
 
@@ -87,13 +117,54 @@ const ComplaintDetailsUser = () => {
         </h2>
         <p className="text-gray-600 mb-6">{complaint.description}</p>
 
-        {/* Complaint Image */}
-        {complaint.complaintImage?.url && (
-          <img
-            src={complaint.complaintImage.url}
-            alt="Complaint"
-            className="w-full h-64 object-cover rounded-lg mb-6"
-          />
+        {/* Complaint Images Section */}
+        {complaintImages.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <Camera className="h-5 w-5 text-blue-500 mr-2" />
+              <h3 className="text-xl font-semibold text-gray-800">Complaint Images</h3>
+            </div>
+            
+            <div className="relative bg-gray-100 rounded-lg p-4">
+              <div className="flex justify-center items-center">
+                <img
+                  src={complaintImages[currentComplaintImageIndex]?.url || '/placeholder.jpg'}
+                  alt={`Complaint ${currentComplaintImageIndex + 1}`}
+                  className="max-h-96 max-w-full object-contain rounded-lg"
+                />
+              </div>
+              
+              {complaintImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentComplaintImageIndex(prev => 
+                      prev === 0 ? complaintImages.length - 1 : prev - 1
+                    )}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentComplaintImageIndex(prev => 
+                      prev === complaintImages.length - 1 ? 0 : prev + 1
+                    )}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                    {complaintImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentComplaintImageIndex(index)}
+                        className={`w-3 h-3 rounded-full ${currentComplaintImageIndex === index ? 'bg-blue-500' : 'bg-gray-300'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Status and Date */}
@@ -122,17 +193,53 @@ const ComplaintDetailsUser = () => {
           </div>
         </div>
 
-        {/* Resolved Image (if available) */}
-        {complaint.resolveImage?.url && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-green-600 mb-2">
-              Resolved Image:
-            </h3>
-            <img
-              src={complaint.resolveImage.url}
-              alt="Resolved"
-              className="w-full h-64 object-cover rounded-lg"
-            />
+        {/* Resolved Images Section */}
+        {resolvedImages.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+              <h3 className="text-xl font-semibold text-gray-800">Resolved Images</h3>
+            </div>
+            
+            <div className="relative bg-gray-100 rounded-lg p-4">
+              <div className="flex justify-center items-center">
+                <img
+                  src={resolvedImages[currentResolvedImageIndex]?.url || '/placeholder.jpg'}
+                  alt={`Resolved ${currentResolvedImageIndex + 1}`}
+                  className="max-h-96 max-w-full object-contain rounded-lg"
+                />
+              </div>
+              
+              {resolvedImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentResolvedImageIndex(prev => 
+                      prev === 0 ? resolvedImages.length - 1 : prev - 1
+                    )}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentResolvedImageIndex(prev => 
+                      prev === resolvedImages.length - 1 ? 0 : prev + 1
+                    )}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                    {resolvedImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentResolvedImageIndex(index)}
+                        className={`w-3 h-3 rounded-full ${currentResolvedImageIndex === index ? 'bg-green-500' : 'bg-gray-300'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 

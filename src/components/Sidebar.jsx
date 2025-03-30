@@ -1,13 +1,23 @@
-import { Link } from 'react-router-dom';
-import { Home, Users, Settings, MessageCircle, Wrench } from 'lucide-react'; // Use Wrench instead of Tool
-import { useAuthContext } from '../hooks/useAuthContext';
+import { Link } from 'react-router-dom'
+import {
+  Home,
+  Users,
+  Settings,
+  MessageCircle,
+  Wrench,
+  SquareChartGantt,
+  SquarePen,
+  UserPlus,
+} from 'lucide-react' // Use Wrench instead of Tool
+
+import { useAuthContext } from '../hooks/useAuthContext'
 
 const Sidebar = () => {
-  const { user } = useAuthContext();
+  const { user } = useAuthContext()
 
-  if (!user) return <div>Loading...</div>;
+  if (!user) return <div>Loading...</div>
 
-  let navItems = [];
+  let navItems = []
   if (user.userType === 'admin') {
     navItems = [
       {
@@ -18,22 +28,37 @@ const Sidebar = () => {
       {
         name: 'Add Officer',
         to: '/admin/addWorker',
-        icon: <Users size={20} className="text-green-400" />,
+        icon: <UserPlus size={20} className="text-green-400" />,
       },
       {
         name: 'Manage Officers',
         to: '/admin/manageWorker',
-        icon: <Settings size={20} className="text-yellow-400" />,
+        icon: <SquareChartGantt size={20} className="text-yellow-400" />,
+      },
+      {
+        name: 'Manage Users',
+        to: '/admin/manageUsers',
+        icon: <Users size={20} className="text-orange-500" />,
+      },
+      {
+        name: 'Create Department',
+        to: '/admin/createDepartment',
+        // icon: <Settings size={20} className="text-yellow-400" />,
+        icon: <SquarePen size={20} className="text-pink-400" />,
       },
       {
         name: 'Feedbacks',
         to: '/admin/allfeedBacks',
         icon: <MessageCircle size={20} className="text-purple-400" />,
       },
-    ];
+    ]
   } else if (user.userType === 'worker') {
     navItems = [
-      { name: 'Home', to: '/worker/manageWork', icon: <Home size={20} className="text-blue-400" /> },
+      {
+        name: 'Home',
+        to: '/worker/manageWork',
+        icon: <Home size={20} className="text-blue-400" />,
+      },
       {
         name: 'Department Works',
         to: '/worker/alldepartmentWorks',
@@ -44,9 +69,15 @@ const Sidebar = () => {
         to: '/worker/feedBackByWorker',
         icon: <MessageCircle size={20} className="text-purple-400" />,
       },
-    ];
+    ]
   } else {
-    navItems = [{ name: 'Home', to: '/users/home', icon: <Home size={20} className="text-blue-400" /> }];
+    navItems = [
+      {
+        name: 'Home',
+        to: '/users/home',
+        icon: <Home size={20} className="text-blue-400" />,
+      },
+    ]
   }
 
   return (
@@ -73,7 +104,7 @@ const Sidebar = () => {
         </ul>
       </nav>
     </aside>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

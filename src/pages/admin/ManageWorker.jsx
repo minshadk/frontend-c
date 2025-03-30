@@ -12,6 +12,7 @@ const ManageWorker = () => {
     const fetchWorkers = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/user/workers`);
+        console.log("Workers data:", response.data); // Debugging line
         setWorkers(response.data.workers);
       } catch (error) {
         setError("Failed to fetch workers.");
@@ -28,7 +29,7 @@ const ManageWorker = () => {
     if (!window.confirm("Are you sure you want to delete this worker?")) return;
 
     try {
-      await axios.delete(`${BASE_URL}/user/workers/${id}`);
+      await axios.delete(`${BASE_URL}/user/user/${id}`);
       setWorkers(workers.filter((worker) => worker._id !== id));
     } catch (error) {
       console.error("Error deleting worker:", error);
