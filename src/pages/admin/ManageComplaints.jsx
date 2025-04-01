@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Loader, AlertCircle, Clock, CheckCircle, XCircle } from 'lucide-react'; // Icons for status and loading
+import { Loader, AlertCircle, Clock, CheckCircle, XCircle, Search ,MapPin} from 'lucide-react';
 
 const ManageComplaints = () => {
   const [complaints, setComplaints] = useState([]);
+  const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchComplaints = async () => {
@@ -17,6 +19,7 @@ const ManageComplaints = () => {
           complaintImage: c.complaintImage || { url: '/placeholder.jpg' },
         }));
         setComplaints(formattedComplaints);
+        setFilteredComplaints(formattedComplaints);
       } catch (err) {
         setError('Failed to fetch complaints.');
       } finally {
@@ -27,10 +30,21 @@ const ManageComplaints = () => {
     fetchComplaints();
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredComplaints(complaints);
+    } else {
+      const filtered = complaints.filter(complaint => 
+        complaint.address.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredComplaints(filtered);
+    }
+  }, [searchTerm, complaints]);
+
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader className="animate-spin h-8 w-8 text-blue-500" /> {/* Loading spinner */}
+        <Loader className="animate-spin h-8 w-8 text-blue-500" />
       </div>
     );
 
@@ -48,9 +62,24 @@ const ManageComplaints = () => {
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
           Manage Complaints
         </h2>
+        
+        {/* Search Bar */}
+        <div className="relative mb-8 max-w-md mx-auto">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search by location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {complaints.length > 0 ? (
-            complaints.map((complaint) => (
+          {filteredComplaints.length > 0 ? (
+            filteredComplaints.map((complaint) => (
               <Link
                 to={`/admin/complaints/${complaint._id}`}
                 key={complaint._id}
@@ -67,6 +96,12 @@ const ManageComplaints = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
                   {complaint.title}
                 </h3>
+
+                {/* Complaint Location */}
+                <p className="text-gray-600 text-sm mb-3 flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {complaint.address || 'Location not specified'}
+                </p>
 
                 {/* Complaint Status */}
                 <div className="flex items-center space-x-2">
@@ -96,9 +131,15 @@ const ManageComplaints = () => {
               </Link>
             ))
           ) : (
-            <p className="text-center col-span-3 text-gray-600">
-              No complaints found.
-            </p>
+            <div className="text-center col-span-3 py-10">
+              <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600 text-lg">
+                {searchTerm.trim() ? 
+                  `No complaints found matching "${searchTerm}"` : 
+                  'No complaints found.'
+                }
+              </p>
+            </div>
           )}
         </div>
       </div>
