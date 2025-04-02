@@ -228,7 +228,7 @@ const RegisterComplaint = () => {
           </div>
 
           <div>
-            {/* <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2">
               <label className="block text-gray-700 font-medium">
                 <MapPin className="h-5 w-5 mr-2 text-blue-500" /> Select Location
               </label>
@@ -245,7 +245,7 @@ const RegisterComplaint = () => {
                 )}
                 My Location
               </button>
-            </div> */}
+            </div>
 
             <div className="flex mb-2">
               <input
